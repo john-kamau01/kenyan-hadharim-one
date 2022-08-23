@@ -46,7 +46,11 @@ const ArticlesPage = () => {
         </div>
         <div className='col-md-4'>
           <h2>Add Article</h2>
-          <AddArticle />
+          {user && userData?.subscription_level !== "Free" ? (
+            <AddArticle />
+          ) : (
+            <Link to="/login" className='btn btn-outline-danger'>Login</Link>
+          )}
         </div>
       </div>
     </div>
