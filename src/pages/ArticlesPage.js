@@ -15,16 +15,12 @@ const ArticlesPage = () => {
           <p>
             This is the page for all articles. 
           </p>
-          <div className='hero__btns mt-3'>
-            <Link to='/' className='btn btn-primary px-4'>Explore</Link>
-            <Link to='/my-account' className='btn btn-success px-4'>Your Account</Link>
-          </div>
+          
         </div>
       </div>
       
       <div className='row'>
         <div className='col-md-8'>
-          <h2>All Articles</h2>
           {isLoadingArticles ? (
             <div>
               <div className="spinner-border text-danger" role="status">
