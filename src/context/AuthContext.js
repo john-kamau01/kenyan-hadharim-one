@@ -114,7 +114,7 @@ export const AuthContextProvider = ({children}) => {
     return () => {
       getSubscriptions();
     }
-  },[]);
+  },[user]);
 
   useEffect(() => {
     const getAllSubscribers = async () => {
@@ -129,7 +129,7 @@ export const AuthContextProvider = ({children}) => {
       getAllSubscribers();
     }
 
-  },[]);
+  },[user]);
 
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
