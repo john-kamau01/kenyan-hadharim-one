@@ -5,7 +5,7 @@ import Articles from '../components/Articles';
 import { UserAuth } from '../context/AuthContext';
 
 const ArticlesPage = () => {
-  const { articles, isLoadingArticles } =UserAuth();
+  const { articles, isLoadingArticles, user, userData } =UserAuth();
 
   return (
     <div className='container'>
