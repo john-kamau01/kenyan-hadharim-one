@@ -97,6 +97,12 @@ export const AuthContextProvider = ({children}) => {
       })
     };
 
+    return () => {
+      getArticles();
+    }
+  },[]);
+
+  useEffect(() => {
     const getSubscriptions = async () => {
       const q = query(subscriptionsCollectionRef, orderBy('createdAt', 'desc'));
       onSnapshot(q, (data) => {
@@ -105,20 +111,24 @@ export const AuthContextProvider = ({children}) => {
       })
     };
 
+    return () => {
+      getSubscriptions();
+    }
+  },[]);
+
+  useEffect(() => {
     const getAllSubscribers = async () => {
       const q = query(allSubscribersCollectionRef, orderBy('subscription_date', 'desc'));
       onSnapshot(q, (data) => {
-        // setIsLoadingArticles(true);
         setAllSubscribers(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
         setIsLoadingAllSubscribers(false);
       })
     };
 
     return () => {
-      getArticles();
-      getSubscriptions();
-      getAllSubscribers()
+      getAllSubscribers();
     }
+
   },[]);
 
   useEffect(() => {
