@@ -1,0 +1,22 @@
+.navbar__container .navbar-brand img{
+  width: 100px;
+}
+
+.navbar__container .nav-link{
+  text-transform: capitalize;
+  color: #000000!important;
+}
+
+.navbar__container .nav-link:hover,
+.navbar__container .active{
+  color: #dc3545!important;
+}
+
+.hero__btns{
+  display: flex;
+  gap: 20px;
+}
+
+.logout-link{
+  cursor: pointer;
+}
