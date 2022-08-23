@@ -85,7 +85,7 @@ export const AuthContextProvider = ({children}) => {
     return () => {
       getUsers();
     }
-  },[]);
+  },[user]);
 
   useEffect(() => {
     const getArticles = async () => {
@@ -100,7 +100,7 @@ export const AuthContextProvider = ({children}) => {
     return () => {
       getArticles();
     }
-  },[]);
+  },[user]);
 
   useEffect(() => {
     const getSubscriptions = async () => {
