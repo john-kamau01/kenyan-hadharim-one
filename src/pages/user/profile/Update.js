@@ -135,15 +135,9 @@ const Update = () => {
           navigate('/profile');
         }, 1000);
       } catch (err) {
-        // if(err.code === 'auth/weak-password'){
-        //   toast.error('Password is too short');
-        // }
-        // if(err.code === 'auth/email-already-in-use'){
-        //   toast.error('Email is already in use');
-        // }
+        toast.error("Error updating!")
         console.log(err);
       }
-
     }
   };
 

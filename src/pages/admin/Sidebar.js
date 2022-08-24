@@ -23,13 +23,13 @@ const Sidebar = () => {
 
         <li className="nav-item">
           <NavLink to="/admin/subscribers" className="nav-link link-dark">
-            Subsribers
+            Manage Subscriptions
           </NavLink>
         </li>
 
         <li className="nav-item">
           <NavLink to="/admin/subscriptions" className="nav-link link-dark">
-            Manage Subscriptions
+            Manage Plans
           </NavLink>
         </li>
 

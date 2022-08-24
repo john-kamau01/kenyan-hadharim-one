@@ -120,10 +120,13 @@ const Register = () => {
           childFormValues,
           subscription_level: "Free",
           role: "user",
+          total_contributions: 0,
           timeStamp: serverTimestamp()
         });
 
         await addDoc(subscribersCollectionRef, {
+          email: data?.email,
+          id:"Free",
           userID: res.user.uid,
           subscription_date: format(new Date(), "dd-MM-yyy"),
           subscription_expiry: "",
@@ -131,13 +134,14 @@ const Register = () => {
           subscription_plan: "Free",
           subscription_price: 0,
           subscription_status: "Approved",
+          mpesa_code: "NO_CODE_FREE",
+          name_of_subscriber: data?.first_name + " " + data?.last_name,
         });
 
         toast.success('Registration Successful. Check your email to verify account!');
         setTimeout(() => {
-          
-          navigate('/profile');
-          verifyEmail();
+        navigate('/profile');
+        verifyEmail();
         }, 1000);
       } catch (err) {
         if(err.code === 'auth/weak-password'){

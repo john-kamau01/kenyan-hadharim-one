@@ -24,7 +24,7 @@ const MySubscriptions = () => {
           <div className='row'>
             <div className='col-md-12 col-xs-12 d-inline-flex justify-content-between align-items-center'>
               <h1>My Subscriptions</h1>
-              <Link to="/#subscriptions" className='btn btn-success btn-sm'>Subscribe</Link>
+              <Link to="/plans" className='btn btn-success btn-sm'>Subscribe</Link>
             </div>
           </div>
 
@@ -53,12 +53,12 @@ const MySubscriptions = () => {
                 </thead>
                 <tbody>
                   {userSubscriptions?.map((subscription, index) => {
-                    const { id, userID, subscription_plan, subscription_period, subscription_price, subscription_status, subscription_date, subscription_expiry } = subscription;
+                    const { id, userID, subscription_plan, subscription_period, subscription_price, subscription_status, subscription_date, subscription_expiry, mpesa_code } = subscription;
 
                     const expiryDate = new Date(subscription_expiry); // MM/DD/YYYY
-                    const subscriptionDate = new Date(subscription_date); // MM/DD/YYYY
+                    const currentDate = new Date();
 
-                    const remainingDays = differenceInDays(expiryDate, subscriptionDate);
+                    const remainingDays = differenceInDays(expiryDate, new Date());
 
                     return (
                       <tr key={id}>
@@ -69,7 +69,7 @@ const MySubscriptions = () => {
                         <td><button className={`btn btn-xs ${subscription_status === "Approved" && "btn-success"} ${subscription_status === "Rejected" && "btn-danger"} ${subscription_status === "Pending" && "btn-warning"}`} style={{ padding: "2px 5px", fontSize:"13px" }}>{subscription_status}</button></td>
                         <td>{subscription_date}</td>
                         <td>{subscription_plan === "Free" ? "No Expiry" : subscription_expiry}</td>
-                        <td>{subscription_plan === "Free" ? "No Expiry" : remainingDays}</td>
+                        <td>{subscription_plan === "Free" ? "No Expiry" : remainingDays} Day{`${remainingDays > 1 ? "s" : ""}`}</td>
                         <td className='d-flex justify-content-between'>
                           <button type="button" className="btn btn-sm btn-success mb-3 mx-1" data-bs-toggle="modal" data-bs-target={`#modal${id}`}>
                             View
@@ -88,8 +88,16 @@ const MySubscriptions = () => {
                                       <table className="table table-responsive">
                                         <tbody>
                                           <tr>
+                                            <th scope="row">Plan ID:</th>
+                                            <td>{id}</td>
+                                          </tr>
+                                          <tr>
                                             <th scope="row">Plan:</th>
                                             <td>{subscription_plan}</td>
+                                          </tr>
+                                          <tr>
+                                            <th scope="row">MPESA Code:</th>
+                                            <td>{mpesa_code}</td>
                                           </tr>
                                           <tr>
                                             <th scope="row">Period:</th>
@@ -110,6 +118,10 @@ const MySubscriptions = () => {
                                           <tr>
                                             <th scope="row">Expiry Date:</th>
                                             <td>{subscription_plan === "Free" ? "No Expiry" : subscription_expiry}</td>
+                                          </tr>
+                                          <tr>
+                                            <th scope="row">Days Remaining</th>
+                                            <td>{subscription_plan === "Free" ? "No Expiry" : remainingDays} Day{`${remainingDays > 1 ? "s" : ""}`}</td>
                                           </tr>
                                         </tbody>
                                       </table>

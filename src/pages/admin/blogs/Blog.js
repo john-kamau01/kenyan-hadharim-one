@@ -3,7 +3,6 @@ import { deleteObject, ref } from 'firebase/storage';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
-import CheckUserRole from '../../../components/CheckUserRole';
 import { UserAuth } from '../../../context/AuthContext';
 import { db, storage } from '../../../firebase/firebase';
 
@@ -31,10 +30,6 @@ const Blog = () => {
       setMainImageURL(article.imageURL);
     }
   },[article]);
-
-  if(userData?.role !== "admin"){
-    <CheckUserRole />
-  };
 
   const handleApprove = async () => {
     if(articleID !== undefined){

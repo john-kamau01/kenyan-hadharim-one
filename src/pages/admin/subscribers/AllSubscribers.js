@@ -1,6 +1,6 @@
-import { differenceInDays, formatDistance } from 'date-fns'
-import { collection, deleteDoc, doc, updateDoc } from 'firebase/firestore';
-import React from 'react'
+import { differenceInDays, formatDistance, set } from 'date-fns'
+import { collection, deleteDoc, doc, onSnapshot, query, updateDoc, where } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify';
 import CheckUserRole from '../../../components/CheckUserRole';
@@ -9,11 +9,11 @@ import { UserAuth } from '../../../context/AuthContext';
 import { db } from '../../../firebase/firebase';
 import Sidebar from '../Sidebar';
 
-
 const AllSubscribers = () => {
   const navigate = useNavigate();
-  const {user,userData, isLoadingAllSubscribers, allSubscribers, } = UserAuth();
-
+  const {user,userData, isLoadingAllSubscribers, allSubscribers,users } = UserAuth();
+  const [singleUser, setSingleUser] = useState({});
+  
   if(user.emailVerified === false){
     return <VerifyAccount user={user}/>
   };
@@ -22,25 +22,40 @@ const AllSubscribers = () => {
     return <CheckUserRole />
   };
 
-  const handleApprove = async (id, userID, subscription_plan) => {
+  const handleSingleUser = (userID) => {
+    onSnapshot(doc(db, "users", userID), (doc) => {
+      // console.log("Current data: ", doc.data());
+      setSingleUser(doc.data())
+    });
+  };
+  console.log(singleUser?.total_contributions)
+
+  const handleApprove = async (id, userID, subscription_plan, subscription_price) => {
       const subscribersCollectionRef = doc(db, "subscribers", id);
       const subscriberCollectionRef = doc(db, "users", userID);
+
+      if(singleUser === undefined){
+        return;
+      }
+      
       try {
         await updateDoc(subscribersCollectionRef, {
           subscription_status: "Approved"
         });
 
         await updateDoc(subscriberCollectionRef, {
-          subscription_level: subscription_plan
+          subscription_level: subscription_plan,
+          total_contributions: parseInt(singleUser?.total_contributions) + parseInt(subscription_price)
         });
 
         toast.success("Subscription Approved successfully!");
+        setSingleUser({});
         navigate('/admin/subscribers');
+
       } catch (error) {
         toast.error("Error approving the subscription");
       }
   };
-
 
   const handleReject = async (id, userID) => {
     const subscribersCollectionRef = doc(db, "subscribers", id);
@@ -104,6 +119,7 @@ const AllSubscribers = () => {
                     <tr>
                       <th scope="col">#</th>
                       <th scope="col">Subscriber</th>
+                      <th scope="col">MPESA Code</th>
                       <th scope="col">Plan</th>
                       <th scope="col">Price <small>(ksh.)</small></th>
                       <th scope="col">Status</th>
@@ -115,48 +131,33 @@ const AllSubscribers = () => {
                   </thead>
                   <tbody>
                     {allSubscribers?.map((subscription, index) => {
-                      const { id, userID, subscription_plan, subscription_period, subscription_price, subscription_status, subscription_date, subscription_expiry, name_of_subscriber } = subscription;
+                      const { id, userID, subscription_plan, subscription_period, subscription_price, subscription_status, subscription_date, subscription_expiry, name_of_subscriber, mpesa_code, email } = subscription;
 
                       const expiryDate = new Date(subscription_expiry); // MM/DD/YYYY
-                      const subscriptionDate = new Date(subscription_date); // MM/DD/YYYY
-
-                      const remainingDays = differenceInDays(expiryDate, subscriptionDate);
+                      const currentDate = new Date();
+                      const remainingDays = differenceInDays(expiryDate, currentDate);
 
                       return (
                         <tr key={id}>
                           <th scope="row">{index + 1}</th>
                           <td>{name_of_subscriber}</td>
+                          <td>{mpesa_code}</td>
                           <td>{subscription_plan === "Free" ? "Free" : subscription_period}</td>
                           <td>{subscription_price}</td>
                           <td><button className={`btn btn-xs ${subscription_status === "Approved" && "btn-success"} ${subscription_status === "Rejected" && "btn-danger"} ${subscription_status === "Pending" && "btn-warning"}`} style={{ padding: "2px 5px", fontSize:"13px" }}>{subscription_status}</button></td>
                           <td>{subscription_date}</td>
                           <td>{subscription_plan === "Free" ? "No Expiry" : subscription_expiry}</td>
-                          <td>{subscription_plan === "Free" ? "No Expiry" : remainingDays} Day{`${remainingDays > 1 ? "s" : ""}`}</td>
+                          <td>{subscription_plan === "Free" ? "No Expiry" : remainingDays} Day{`${parseInt(remainingDays) > 1 ? "s" : ""}`}</td>
                           <td className='d-flex justify-content-between'>
-                            <button type="button" className="btn btn-sm btn-success mb-3 mx-1" data-bs-toggle="modal" data-bs-target={`#modal${id}`}>
+                            <button 
+                              type="button" 
+                              className="btn btn-sm btn-success mb-3 mx-1" 
+                              data-bs-toggle="modal" 
+                              data-bs-target={`#modal${id}`}
+                              onClick={() => handleSingleUser(userID)}
+                            >
                               View
                             </button>
-                            {subscription_status === 'Pending' && (
-                              <div className='d-flex align-items-center'>
-                                <button className='btn btn-sm btn-primary mb-3 mx-1' onClick={() => handleApprove(id, userID, subscription_plan)}>Approve</button>
-                                <button className='btn btn-sm btn-warning mb-3 mx-1' onClick={() => handleReject(id, userID)}>Reject</button>
-                                <button className='btn btn-sm btn-danger mb-3 mx-1' onClick={() => handleDelete(id, userID)}>Delete</button>
-                              </div>
-                            )}
-
-                            {subscription_status === 'Approved' && (
-                              <div className='d-flex align-items-center'>
-                                <button className='btn btn-sm btn-warning mb-3 mx-1' onClick={() => handleReject(id, userID)}>Reject</button>
-                                <button className='btn btn-sm btn-danger mb-3 mx-1' onClick={() => handleDelete(id, userID)}>Delete</button>
-                              </div>
-                            )}
-
-                            {subscription_status === 'Rejected' && (
-                              <div className='d-flex align-items-center'>
-                                <button className='btn btn-sm btn-primary mb-3 mx-1' onClick={() => handleApprove(id, userID)}>Approve</button>
-                                <button className='btn btn-sm btn-danger mb-3 mx-1' onClick={() => handleDelete(id, userID)}>Delete</button>
-                              </div>
-                            )}
 
                             <div className="modal fade" id={`modal${id}`} tabIndex={-1} aria-labelledby="userModalLabel" aria-hidden="true">
                               <div className="modal-dialog modal-dialog-scrollable">
@@ -170,9 +171,21 @@ const AllSubscribers = () => {
                                       <div className='col-md-8 col-sm-12'>
                                         <table className="table table-responsive">
                                           <tbody>
-                                          <tr>
+                                            <tr>
+                                              <th scope="row">Subscription ID:</th>
+                                              <td>{id}</td>
+                                            </tr>
+                                            <tr>
                                               <th scope="row">Subscriber:</th>
                                               <td>{name_of_subscriber}</td>
+                                            </tr>
+                                            <tr>
+                                              <th scope="row">Email:</th>
+                                              <td>{email}</td>
+                                            </tr>
+                                            <tr>
+                                              <th scope="row">MPESA Code:</th>
+                                              <td>{mpesa_code}</td>
                                             </tr>
                                             <tr>
                                               <th scope="row">Plan:</th>
@@ -208,7 +221,29 @@ const AllSubscribers = () => {
                                     </div>
                                   </div>
                                   <div className="modal-footer">
-                                    <button type="button" className="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                                    {subscription_status === 'Pending' && (
+                                      <div className='d-flex align-items-center'>
+                                        <button type='button' className='btn btn-sm btn-primary mb-3 mx-1' onClick={() => handleApprove(id, userID, subscription_plan, subscription_price)} data-bs-dismiss="modal">Approve</button>
+                                        <button type='button' className='btn btn-sm btn-warning mb-3 mx-1' onClick={() => handleReject(id, userID)} data-bs-dismiss="modal">Reject</button>
+                                        <button type='button' className='btn btn-sm btn-danger mb-3 mx-1' onClick={() => handleDelete(id, userID)} data-bs-dismiss="modal">Delete</button>
+                                      </div>
+                                    )}
+
+                                    {subscription_status === 'Approved' && (
+                                      <div className='d-flex align-items-center'>
+                                        <button type='button' className='btn btn-sm btn-danger mb-3 mx-1' onClick={() => handleDelete(id, userID)} data-bs-dismiss="modal">Delete</button>
+                                      </div>
+                                    )}
+
+                                    {subscription_status === 'Rejected' && (
+                                      <div className='d-flex align-items-center'>
+                                        <button type='button' className='btn btn-sm btn-primary mb-3 mx-1' onClick={() => handleApprove(id, userID)} data-bs-dismiss="modal">Approve</button>
+                                        <button type='button' className='btn btn-sm btn-danger mb-3 mx-1' onClick={() => handleDelete(id, userID)} data-bs-dismiss="modal">Delete</button>
+                                      </div>
+                                    )}
+                                    <div className='d-flex align-items-center'>
+                                      <button type="button" className="btn btn-sm btn-secondary mb-3" data-bs-dismiss="modal">Close</button>
+                                    </div>
                                   </div>
                                 </div>
                               </div>

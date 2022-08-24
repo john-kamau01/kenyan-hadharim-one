@@ -37,7 +37,8 @@ const Account = () => {
     profile_image,
     role,
     childFormValues,
-    subscription_level
+    subscription_level,
+    total_contributions
   } = userData;
 
   if(user.emailVerified === false){
@@ -282,7 +283,11 @@ const Account = () => {
               </div>
 
               <div className='col-md-7'>
-                <p className='fs-3'>Welcome to your profile page <b>{first_name}</b></p>
+                <p className='fs-3 fw-light'>Welcome to your profile page <b>{first_name}</b></p>
+                <hr />
+
+                <p className='fw-normal'>You are currently on: <span className='fw-bold text-success'>{subscription_level}</span> plan</p>
+                <p className='fw-normal'>Your total subscription amount is: <span className='fw-bold text-success'>{`ksh. ${total_contributions}`}</span></p>
               </div>
             </div>
           )}

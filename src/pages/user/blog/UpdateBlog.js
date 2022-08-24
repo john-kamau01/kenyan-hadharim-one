@@ -1,118 +1,212 @@
-import { addDoc, collection, Timestamp } from 'firebase/firestore';
+import { UserAuth } from '../../../context/AuthContext';
+import { db, storage } from '../../../firebase/firebase';
+import { collection, doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
-import React, { useState } from 'react';
-import { toast, ToastContainer } from 'react-toastify';
-import { db, storage } from '../firebase/firebase';
-import { UserAuth } from '../context/AuthContext';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
 
+import ProfileSidebar from '../ProfileSidebar';
 
-const UpdateBlog = () => {
-  const navigate = useNavigate();
+const Update = () => {
   const { id } = useParams();
-  const [article, setArticle] = useState(null);
-  // Get the current logged in user
-  const { user,userData } = UserAuth();
-  const fullName = userData?.first_name + ' ' + userData?.last_name;
-  const userID = user?.uid;
+  const { user, userData } = UserAuth();
 
+  const articlesRef = doc(db, "articles", id);
+
+  let navigate = useNavigate();
+  const [file, setFile] = useState("");
   const [progress, setProgress] = useState(0);
-  const [formData, setFormData] = useState({
+  const [data, setData] = useState({
     title: "",
-    content: "",
-    image: "",
-    createdAt: Timestamp.now().toDate(),
+    imageURL: "",
+    article_content: "",
   });
+  
+  const [formErrors, setFormErrors] = useState({});
+  const [isSubmit, setIsSubmit] = useState(false);
 
-  const handleChange = (e) => {
-    setFormData({...formData, [e.target.name]:e.target.value });
+  useEffect(() => {
+    id && getSingleArticle();
+  },[id]);
+
+  const getSingleArticle = async () => {
+    const docRef = doc(db, "articles", id);
+    const snapshot = await getDoc(docRef);
+    if(snapshot.exists()){
+      setData({...snapshot.data()});
+    }
+  }
+
+  useEffect(() => {
+    const uploadFile = () => {
+      const name = new Date().getTime() + file.name;
+      const storageReference = ref(storage, `/images/${file.name}`);
+      const uploadTask = uploadBytesResumable(storageReference, file);
+
+      uploadTask.on('state_changed', 
+        (snapshot) => {
+          const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+          setProgress(progress);
+          switch (snapshot.state) {
+            case 'paused':
+              console.log('Upload is paused');
+              break;
+            case 'running':
+              console.log('Upload is running');
+              break;
+          }
+        }, 
+        (error) => {
+          toast.error("There was an error uploading the image. Please try again.")
+          console.log(error);
+        }, 
+        () => {
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            setData((prev) => ({...prev, imageURL: downloadURL}));
+          });
+        }
+      );
+    };
+
+    file && uploadFile();
+  },[file]);
+
+  const handleInput = (e) => {
+    const id = e.target.id;
+    const value = e.target.value;
+    setData({...data, [id]:value});
   };
 
-  const handleImageChange = (e) => {
-    setFormData({...formData, image: e.target.files[0] });
-  };
-
-  const handlePublish = (e) => {
+  const handleUpdateArticle = async (e) => {
     e.preventDefault();
-    if(!formData.title || !formData.content || !formData.image){
-      toast.error('Please fill in all the blanks');
-      return;
-    }
+    setFormErrors(validate(data));
 
-    const storageRef = ref(storage, `/images/${Date.now()}${formData.image.name}`);
-    const uploadImage = uploadBytesResumable(storageRef, formData.image);
+    if(isSubmit){
+      const docRef = doc(db, 'articles', id);
+      try {
+        await updateDoc(docRef, {
+          ...data,
+        });
 
-    uploadImage.on('state_changed', (snapshot) => {
-      const progressPercent = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-      setProgress(progressPercent);
-    },
-    (err) => {
-      toast.error("There was an error uploading the image. Please try again.")
-      console.log(err);
-    },
-    () => {
-      setFormData({
-        title: "",
-        content: "",
-        image: "",
-      });
-      getDownloadURL(uploadImage.snapshot.ref)
-      .then((url) => {
-        const articleRef = collection(db, 'articles');
-        addDoc(articleRef, {
-          title: formData.title,
-          article_content: formData.content,
-          imageURL: url,
-          createdBy: fullName,
-          userID,
-          status: 'pending',
-          createdAt: Timestamp.now().toDate()
-        })
-        .then(() => {
-          toast.success('Article added successfully. Your article will be published after it has been reviewed.');
-          setProgress(0);
-        })
-        .catch((err) => {
-          toast.error('Error submitting the article');
-          console.log(err);
-        })
-      });
+        toast.success('Article updated successful!');
+        setTimeout(() => {
+          navigate('/blog');
+        }, 1000);
+      } catch (err) {
+        toast.error("Error updating!")
+        console.log(err);
+      }
     }
-    );
   };
+
+  useEffect(() => {
+    if(Object.keys(formErrors).length === 0){
+      setIsSubmit(true);
+    }
+  }, [formErrors]);
+
+  const validate = (values) => {
+    const errors = {};
+    if(!values.file){
+      errors.file = "Please upload the post image";
+    }
+    if(!values.title){
+      errors.first_titlename = "Please enter a title";
+    }
+    if(!values.content){
+      errors.content = "Please enter post content";
+    }
+    return errors;
+  };
+
+  // console.log(data)
+
 
   return (
-    <div className=''>
+    <div className='container'>
       <ToastContainer />
-      <form>
-        <div className='mb-3'>
-          <label htmlFor='title'>Article Title</label>
-          <input type="text" className='form-control' name="title" id="title" value={formData.title} onChange={e => handleChange(e)} />
+      <div className='row'>
+        <div className='col-md-3 col-xs-12 py-5'>
+          <ProfileSidebar />
         </div>
 
-        <div className='mb-3'>
-          <label htmlFor='content'>Article Content</label>
-          <textarea className='form-control' name="content" id="content" value={formData.content} onChange={e => handleChange(e)} />
-        </div>
-
-        <div className='mb-3'>
-          <label htmlFor='image'>Upload image</label>
-          <input type="file" className='form-control' name="image" id="image" accept='image/*' onChange={e => handleImageChange(e)} />
-        </div>
-
-        {progress === 0 ? null : (
-          <div className="progress mb-2">
-            <div className="progress-bar progress-bar-striped progress-bar-animated" style={{ width: `${progress}%`}}>
-              `Uploading {progress}%`
-            </div>
+        <div className='col-md-9 py-5'>
+          <div>
+          <h1>Update Article Details</h1>
+          <button className='btn btn-warning btn-sm px-5'>Back</button>
           </div>
-        )} 
-        
-        <button className='btn btn-danger' onClick={handlePublish}>Add Article</button>
-      </form>
-      <hr />
+
+          <form onSubmit={handleUpdateArticle}>
+            <div className='row'>
+              <div className='col-md-12'>
+                <h4 className='title'>Featured Image:</h4>
+                <hr />
+              </div>
+              <div className="col-md-12 col-sm-12 mb-3">
+                <img src={data?.imageURL ? data.imageURL :
+                  file
+                    ? URL.createObjectURL(file)
+                    : "https://icon-library.com/images/no-image-icon/no-image-icon-0.jpg" 
+                  } 
+                  alt=''
+                  className='img-fluid'
+                  style={{ borderRadius: "5px", objectFit: "cover", marginBottom: "5px", maxHeight:"200px" }}
+                />
+                {progress === 0 && null }
+                {progress > 0 && (
+                  <div className="progress mb-2">
+                    <div className="progress-bar progress-bar-success progress-bar-animated" style={{ width: `${progress}%`}}>
+                      Uploading {progress}%
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="col-md-6 col-sm-6 mb-3">
+                <label htmlFor="file" className="form-label">Post Image</label>
+                <input 
+                  type="file"
+                  className="form-control" 
+                  id="file" 
+                  onChange={e => setFile(e.target.files[0])}
+                  accept='image/*'
+                />
+                <span className='text-danger text-sm'>{formErrors.file}</span>
+              </div>
+              <div className='col-md-12'>
+                <h4 className='title'>Title & Content</h4>
+                <hr />
+              </div>
+              <div className="col-md-12 mb-3">
+                <label htmlFor="title" className="form-label">Title</label>
+                <input 
+                  type="text"
+                  className="form-control" 
+                  id="title" 
+                  placeholder='Article Title'
+                  onChange={handleInput}
+                  value={data?.title}
+                />
+                <span className='text-danger text-sm'>{formErrors.title}</span>
+              </div>
+              <div className="col-md-12 mb-3">
+                <label htmlFor="article_content" className="form-label">Article Content</label>
+                <textarea
+                  className="form-control" 
+                  id="article_content" 
+                  placeholder='Article Content'
+                  onChange={handleInput}
+                  value={data?.article_content}
+                />
+                <span className='text-danger text-sm'>{formErrors.title}</span>
+              </div>
+            </div>
+            <button type="submit" className="btn btn-danger ps-3">Update</button>
+          </form>
+        </div>
+      </div>
     </div>
   )
 }
 
-export default UpdateBlog;
+export default Update

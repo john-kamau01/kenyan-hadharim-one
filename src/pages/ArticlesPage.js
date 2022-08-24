@@ -11,11 +11,10 @@ const ArticlesPage = () => {
     <div className='container'>
       <div className='row'>
         <div className='col-12 py-5'>
-          <h1>Welcome to the articles page.</h1>
-          <p>
-            This is the page for all articles. 
+          <h1 className='text-center fw-normal'>Blogs Page</h1>
+          <p className='text-center lead text-muted'>
+            View All Blog Posts
           </p>
-          
         </div>
       </div>
       
@@ -41,11 +40,27 @@ const ArticlesPage = () => {
           )}
         </div>
         <div className='col-md-4'>
-          <h2>Add Article</h2>
-          {user && userData?.subscription_level !== "Free" ? (
+          <h2 className='fw-normal'>Add Article</h2>
+          {!user && (
+            <div className="card">
+              <div className="card-body">
+                <h5 className="card-title">Enjoy our priveledges</h5>
+                <Link to="/login" className='btn btn-warning px-5 mx-1'>Login</Link>
+                <Link to="/register" className='btn btn-danger px-5 mx-1'>Register</Link>
+              </div>
+          </div>
+          )}
+          
+          {user && userData?.subscription_level !== "Free" && (
             <AddArticle />
-          ) : (
-            <Link to="/login" className='btn btn-outline-danger'>Login</Link>
+          )}
+          {user && userData?.subscription_level === "Free" && (
+            <div className="card">
+              <div className="card-body">
+                <h5 className="card-title">You are on a free subscription</h5>
+                <Link to="/#subscriptions" class="btn btn-primary btn-sm px-4">Subscribe to Post</Link>
+              </div>
+            </div>
           )}
         </div>
       </div>

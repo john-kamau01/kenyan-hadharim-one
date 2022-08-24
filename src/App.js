@@ -26,6 +26,10 @@ import EditSubscription from './pages/admin/subscriptions/EditSubscription';
 import ArticlePage from './pages/ArticlePage';
 import MySubscriptions from './pages/user/subscriptions/MySubscriptions';
 import AllSubscribers from './pages/admin/subscribers/AllSubscribers';
+import AboutPage from './pages/AboutPage';
+import ContactPage from './pages/ContactPage';
+import PlansPage from './pages/PlansPage';
+import UpdateBlog from './pages/user/blog/UpdateBlog';
 
 const App = () => {
   return (
@@ -35,6 +39,9 @@ const App = () => {
           <Header />
           <Routes>
             <Route path='/' element={<HomePage />} />
+            <Route path='/about' element={<AboutPage />} />
+            <Route path='/contact' element={<ContactPage />} />
+            <Route path='/plans' element={<PlansPage />} />
             <Route path='articles' element={<ArticlesPage />} />
             <Route path='article/:id' element={<ArticlePage />} />
             <Route path='login' element={<Login />} />
@@ -55,6 +62,9 @@ const App = () => {
               <Route index element={<ProtectedRoute><Account /></ProtectedRoute>} />
               <Route path='update/:id' element={<ProtectedRoute><Update /></ProtectedRoute>} />
               <Route path='subscriptions' element={<ProtectedRoute><MySubscriptions /></ProtectedRoute>} />
+              <Route path='ownblogs' element={<ProtectedRoute><Blogs /></ProtectedRoute>} />
+              <Route path='ownblog/:id' element={<ProtectedRoute><Blog /></ProtectedRoute>} />
+              <Route path='ownblog/edit/:id' element={<ProtectedRoute><UpdateBlog /></ProtectedRoute>} />
             </Route>
 
             <Route path="blog">

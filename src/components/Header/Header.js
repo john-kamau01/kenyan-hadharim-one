@@ -32,20 +32,26 @@ const Header = () => {
             <span className="navbar-toggler-icon"></span>
           </button>
           <div className="collapse navbar-collapse" id="mainNav">
-            <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
+            <ul className="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
               <li className="nav-item">
                 <NavLink to='/' className="nav-link">Home</NavLink>
               </li>
               <li className="nav-item">
+                <NavLink to='/about' className="nav-link">About</NavLink>
+              </li>
+              <li className="nav-item">
+                <NavLink to='/plans' className="nav-link">Plans</NavLink>
+              </li>
+              <li className="nav-item">
                 <NavLink to='/articles' className="nav-link">Articles</NavLink>
+              </li>
+              <li className="nav-item">
+                <NavLink to='/contact' className="nav-link">Contact</NavLink>
               </li>
               {!user ? (
                 <>
                   <li className="nav-item">
-                    <NavLink to='/login' className="nav-link">Login</NavLink>
-                  </li>
-                  <li className="nav-item">
-                    <NavLink to='/register' className="nav-link">Register</NavLink>
+                    <NavLink to='/login' className="nav-link">Login / Register</NavLink>
                   </li>
                 </>
               ) : (
@@ -55,12 +61,17 @@ const Header = () => {
                     <NavLink to='/admin' className="nav-link">Admin</NavLink>
                   </li>
                 )}
-                  
                   <li className="nav-item">
-                    <NavLink to='/profile' className="nav-link">Account</NavLink>
+                    <NavLink to='/profile' className="nav-link">Profile</NavLink>
                   </li>
-                  <li className="nav-item">
-                    <span className='nav-link logout-link' onClick={handleLogout}>Logout</span>
+                  <li className="nav-item dropdown">
+                    <span className="dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      <img src={userData?.profile_image} alt="avatar" style={{ width: "30px", height:"30px",borderRadius:"50%", objectFit:"cover" }} />
+                    </span>
+                    <ul className="dropdown-menu">
+                      <li><span className='nav-link logout-link dropdown-item' onClick={handleLogout}>Logout</span></li>
+
+                    </ul>
                   </li>
                 </>
               )}

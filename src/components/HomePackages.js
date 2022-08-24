@@ -8,19 +8,43 @@ import { UserAuth } from '../context/AuthContext';
 const HomePackages = () => {
   const { user, userData, subscriptions, subscribersCollectionRef, userSubscriptions } = UserAuth();
   const navigate = useNavigate();
+  const [mpesaCode, setMpesaCode] = useState("");
+  const [data, setData] = useState({
+    id:"",
+    period: "",
+    price: "",
+  });
 
-  const handleSubscription = async (id, period, price) => {
-    if(period !== undefined && period === "1 Month"){
+  const handleData = (id, period, price) => {
+    setData({...data, id, period, price})
+  };
+
+  const handleInput = (e) => {
+    setData({...data, mpesa_code: e.target.value});
+  };
+
+  const handleSubscription = async (e) => {
+    const {period, price} = data;
+    e.preventDefault();
+    if(data?.mpesa_code === ""){
+      toast.error("Please enter the MPESA Code received.")
+      return;
+    }
+    
+    if(data?.period !== undefined && data?.period === "1 Month"){
       try {
         await addDoc(subscribersCollectionRef, {
+          id:data?.id,
           userID: user?.uid,
+          email: userData?.email,
           name_of_subscriber: userData?.first_name + " " + userData?.last_name,
           subscription_date: format(new Date(), "MM/dd/yyyy"),
           subscription_expiry: format(addMonths(new Date(), 1), "MM/d/yyyy"),
-          subscription_period: period,
-          subscription_plan: period,
-          subscription_price: price,
+          subscription_period: data?.period,
+          subscription_plan: data?.period,
+          subscription_price: data?.price,
           subscription_status: "Pending",
+          mpesa_code: data?.mpesa_code,
         });
 
         toast.success("Subscription was successfull. Please check your email for further instructions!");
@@ -32,22 +56,26 @@ const HomePackages = () => {
       }
     }
 
-    if(period !== undefined && period === "3 Months"){
+    if(data?.period !== undefined && data?.period === "3 Months"){
       try {
         await addDoc(subscribersCollectionRef, {
+          id:data?.id,
           userID: user?.uid,
+          email: userData?.email,
           name_of_subscriber: userData?.first_name + " " + userData?.last_name,
           subscription_date: format(new Date(), "MM/dd/yyyy"),
           subscription_expiry: format(addMonths(new Date(), 3), "MM/dd/yyyy"),
-          subscription_period: period,
-          subscription_plan: period,
-          subscription_price: price,
+          subscription_period: data?.period,
+          subscription_plan: data?.period,
+          subscription_price: data?.price,
           subscription_status: "Pending",
+          mpesa_code: data?.mpesa_code,
         });
         toast.success("Subscription was successfull. Please check your email for further instructions!");
         navigate("/profile")
       } catch (error) {
         console.log(error)
+        toast.error("There was an error.")
       }
     }
   };
@@ -85,13 +113,64 @@ const HomePackages = () => {
                         )}
                         
                         {user ? (
-                          <button 
+                          <>
+                          {/* <button 
                             type="button" 
                             className="w-100 btn btn-outline-primary" 
-                            onClick={() => handleSubscription(id, subscription_period, subscription_price)} disabled={userData?.subscription_level === subscription?.subscription_period || subscription?.subscription_period === "Free" }
+                            onClick={() => handleSubscription(id, subscription_period, subscription_price)} disabled={userData?.subscription_level !== "Free" || subscription?.subscription_period === "Free" }
+                          >
+                            Subscribe{userData?.subscription_level === subscription?.subscription_period && "d"}
+                          </button> */}
+
+                          <button 
+                            type="button" 
+                            className="w-100 btn btn-outline-primary mt-1" 
+                            data-bs-toggle="modal" 
+                            data-bs-target={`#modal${id}`}
+                            disabled={userData?.subscription_level !== "Free" || subscription?.subscription_period === "Free"}
+                            onClick={() => handleData(id,subscription_period, subscription_price)}
                           >
                             Subscribe{userData?.subscription_level === subscription?.subscription_period && "d"}
                           </button>
+
+                          <div className="modal fade" id={`modal${id}`} tabIndex={-1} aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div className="modal-dialog">
+                              <div className="modal-content">
+                                <div className="modal-header">
+                                  <h5 className="modal-title" id="exampleModalLabel">Subscribing to {data?.period} plan</h5>
+                                  <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div className="modal-body">
+                                  <form>
+                                    <div className="mb-3">
+                                      <label htmlFor="mpesa_code" className="form-label">MPESA Code</label>
+                                      <input 
+                                        type="text" 
+                                        className="form-control" 
+                                        id="mpesa_code"
+                                        placeholder='Example: MPESA123CODE'
+                                        required={true} 
+                                        onChange={handleInput}
+                                      />
+                                    </div>
+                                    <button 
+                                      type="submit" 
+                                      className="btn btn-primary"
+                                      onClick={handleSubscription}
+                                      disabled={userData?.subscription_level !== "Free" || subscription?.subscription_period === "Free" || data?.mpesa_code === ""}
+                                      data-bs-dismiss="modal"
+                                    >
+                                      Submit
+                                    </button>
+                                  </form>
+                                </div>
+                                <div className="modal-footer">
+                                  <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          </>
                         ) : (
                           <Link to='/login' className='w-100 btn btn-outline-primary'>Login</Link>
                         )}
