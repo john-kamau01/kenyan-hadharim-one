@@ -20,6 +20,7 @@ export const AuthContextProvider = ({children}) => {
   const [users, setUsers] = useState([]);
   
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingContributions, setIsLoadingContributions] = useState(true);
   const [isLoadingArticles, setIsLoadingArticles] = useState(true);
   const [isLoadingUserArticles, setIsLoadingUserArticles] = useState(true);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
@@ -29,6 +30,7 @@ export const AuthContextProvider = ({children}) => {
   const [articles, setArticles] = useState([]);
   const [subscriptions, setSubscriptions] = useState([]);
   const [userSubscriptions, setUserSubscriptions] = useState([]);
+  const [allContributions, setAllContributions] = useState({});
 
   const [allSubscribers, setAllSubscribers] = useState([]);
 
@@ -39,6 +41,8 @@ export const AuthContextProvider = ({children}) => {
   const usersCollectionRef = collection(db, 'users');
   const subscribersCollectionRef = collection(db, 'subscribers');
   const articlesCollectionRef = collection(db, 'articles');
+  const contributionsCollectionRef = collection(db, 'contributions');
+  const contributionsRef = doc(db, "contributions", "vJkToxPUuPgtUaN5t8Ds");
   const subscriptionsCollectionRef = collection(db, 'subscriptions');
   const allSubscribersCollectionRef = collection(db, "subscribers");
 
@@ -155,6 +159,25 @@ export const AuthContextProvider = ({children}) => {
   },[user]);
 
   useEffect(() => {
+    const fetchAllContributions = async () =>{
+        onSnapshot(doc(db, "contributions", "vJkToxPUuPgtUaN5t8Ds"), (doc) => {
+          // console.log("Current data: ", doc.data());
+          setAllContributions(doc.data());
+          setIsLoadingContributions(false);
+      });
+
+    };
+
+    return () => {
+      fetchAllContributions();
+    };
+
+  },[user]);
+
+
+
+
+  useEffect(() => {
     const fetchUserArticles = async () =>{
       if(currentUserID !== undefined){
         const q = query(collection(db, "articles"), where("userID", "==", `${currentUserID}`));
@@ -187,7 +210,7 @@ export const AuthContextProvider = ({children}) => {
 
 
   return (
-    <AuthContext.Provider value={{ createUser, loginUser, logout, user, users, usersCollectionRef, isLoading, articles, isLoadingArticles, verifyEmail, currentUserID, userData, isLoadingUser, userArticles, isLoadingUserArticles, subscriptions, subscriptionsCollectionRef, subscribersCollectionRef, userSubscriptions, isLoadingUserSubscriptions, allSubscribers }}>
+    <AuthContext.Provider value={{ createUser, loginUser, logout, user, users, usersCollectionRef, isLoading, articles, isLoadingArticles, verifyEmail, currentUserID, userData, isLoadingUser, userArticles, isLoadingUserArticles, subscriptions, subscriptionsCollectionRef, subscribersCollectionRef, userSubscriptions, isLoadingUserSubscriptions, allSubscribers, contributionsCollectionRef, allContributions, contributionsRef }}>
       {children}
     </AuthContext.Provider>
   );

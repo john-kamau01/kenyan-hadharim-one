@@ -7,7 +7,7 @@ import Sidebar from './Sidebar';
 
 const Admin = () => {
   let navigate = useNavigate();
-  const { user, userData, users, allSubscribers, articles } = UserAuth();
+  const { user, userData, users, allSubscribers, articles, allContributions } = UserAuth();
   const [totalAmount, setTotalAmount] = useState(0);
   const [approvedSubscriptions, setApprovedSubscriptions] = useState([]);
   const [rejectedSubscriptions, setRejectedSubscriptions] = useState([]);
@@ -93,8 +93,6 @@ const Admin = () => {
     return <CheckUserRole />
   };
 
-  console.log(totalAmount)
-
   return (
     <div className='container'>
       <div className='row'>
@@ -132,7 +130,7 @@ const Admin = () => {
               <div className="card-header text-center">Total Amount</div>
                 <div className="card-body text-center">
                   <h6 className="card-subtitle tex-success" style={{ fontSize:"40px", fontWeight:"bold", paddingTop:"30px", paddingBottom:"30px" }}>
-                    {totalAmount}
+                    {allContributions.amount}
                   </h6>
                   <Link to='/admin/users' className='w-100 btn btn-danger px-5 btn-sm'>
                     View Users

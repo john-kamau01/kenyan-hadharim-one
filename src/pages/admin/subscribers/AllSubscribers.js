@@ -1,5 +1,5 @@
 import { differenceInDays, formatDistance, set } from 'date-fns'
-import { collection, deleteDoc, doc, onSnapshot, query, updateDoc, where } from 'firebase/firestore';
+import { collection, deleteDoc, doc, onSnapshot, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify';
@@ -11,7 +11,7 @@ import Sidebar from '../Sidebar';
 
 const AllSubscribers = () => {
   const navigate = useNavigate();
-  const {user,userData, isLoadingAllSubscribers, allSubscribers,users } = UserAuth();
+  const {user,userData, isLoadingAllSubscribers, allSubscribers,users, contributionsRef, allContributions } = UserAuth();
   const [singleUser, setSingleUser] = useState({});
   
   if(user.emailVerified === false){
@@ -28,7 +28,6 @@ const AllSubscribers = () => {
       setSingleUser(doc.data())
     });
   };
-  console.log(singleUser?.total_contributions)
 
   const handleApprove = async (id, userID, subscription_plan, subscription_price) => {
       const subscribersCollectionRef = doc(db, "subscribers", id);
@@ -47,6 +46,13 @@ const AllSubscribers = () => {
           subscription_level: subscription_plan,
           total_contributions: parseInt(singleUser?.total_contributions) + parseInt(subscription_price)
         });
+
+        await updateDoc(contributionsRef, {
+          amount: parseInt(allContributions?.amount) + parseInt(subscription_price),
+          updatedAt: serverTimestamp(),
+        });
+
+        
 
         toast.success("Subscription Approved successfully!");
         setSingleUser({});
