@@ -21,7 +21,8 @@ const Admin = () => {
     const getAmount = () => {
       const sum = users?.reduce((accumulator, object) => {
         return accumulator + parseInt(object.total_contributions)
-      }, 0)
+      }, 0);
+
       setTotalAmount(sum);
     }
     
@@ -91,6 +92,8 @@ const Admin = () => {
   if( userData?.role !== 'admin' ){
     return <CheckUserRole />
   };
+
+  console.log(totalAmount)
 
   return (
     <div className='container'>
